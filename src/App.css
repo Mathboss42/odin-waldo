@@ -1,0 +1,17 @@
+.grid-container {
+    width: 2148px;
+    height: 4004px;
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(107, 1fr);
+    grid-template-rows: repeat(200) 1fr;
+}
+
+img {
+    position: absolute;
+    z-index: -1;
+}
+
+.grid-cell {
+    border: 1px solid red;
+}
