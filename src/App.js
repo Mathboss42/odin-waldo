@@ -4,7 +4,9 @@ import { getFirebaseConfig } from './firebase-config.js';
 import { getFirestore, getDocs, collection, query} from "firebase/firestore";
 import { getDownloadURL, getStorage, ref } from "firebase/storage";
 import { useEffect, useRef, useState } from 'react';
+import StartMenu from './components/StartMenu';
 import CharacterSelector from './components/CharacterSelector';
+import { useNavigate } from 'react-router-dom';
 
 const GRIDX = 50;
 const GRIDY = 100;
@@ -19,6 +21,7 @@ const pathReference = ref(storage, 'bg01.png');
 
 
 function App() {
+    const [isGameRunning, setIsGameRunning] = useState(false);
     const [bgImg, setBgImg] = useState('');
     const [isSelectorDisplayed, setIsSelectorDisplayed] = useState(false);
     const [selectorCoords, setSelectorCoords] = useState([0, 0]);
@@ -26,33 +29,26 @@ function App() {
     const [charactersFound, setcharactersFound] = useState([]);
     const [time, setTime] = useState(0);
     const [charactersLeft, setCharactersLeft] = useState(['zoidberg', 'jabba', 'wilson']);
+    const [isTimerActive, setIsTimerActive] = useState(false);
     
     const canClick = useRef(true);
     
+    const navigate = useNavigate();
+
     useEffect(() => {
         getDownloadURL(pathReference).then((url) => {
             setBgImg(url);
         });
-
-        // const setSticky = () => {
-        //     window.onscroll = function() {switchSticky()};
-        //     const header = document.querySelector(".header");
-        //     const sticky = header.offsetTop;
-
-        //     function switchSticky() {
-        //         if (window.pageYOffset > sticky) {
-        //             header.classList.add("sticky");
-        //         } else {
-        //             header.classList.remove("sticky");
-        //         }
-        //     }
-        // }
-
-        // setSticky();
     }, [])
 
     useEffect(() => {
-        const interval = setInterval(() => {setTime(time + 1)}, 1000);
+        let interval;
+
+        if (isTimerActive) {
+            interval = setInterval(() => {setTime(time + 1)}, 1000);
+        } else {
+            clearInterval(interval);
+        }
 
         return () => {
             clearInterval(interval);
@@ -61,8 +57,9 @@ function App() {
 
     useEffect(() => {
         if (charactersFound.length === 3) {
-            alert('You Won!');
-            canClick.current = false;
+            // alert('You Won!');
+            // canClick.current = false;
+            navigate('/endgame', {state: {time: time}});
         }
     }, [charactersFound])
 
@@ -123,9 +120,11 @@ function App() {
         if (checkCoords(cellX, cellY, corners)) {
             setcharactersFound([...charactersFound, character]);
             setCharactersLeft(charactersLeft.filter(el => el !== character));
-            console.log('success!');
+            // console.log('success!');
+            alert(`Well done, you found ${character[0].toUpperCase() + character.slice(1, character.length)}!`)
         } else {
-            console.log('fail');
+            // console.log('fail');
+            alert(`Wrong guess, sorry!`);
         }
 
         canClick.current = true;
@@ -138,40 +137,54 @@ function App() {
                 && y <= corners[0].coords.y
     }
 
-    return (
-        <div className="App">
-            <div className="header">
-                <div className='header-sub'>
-                    <h1>Where's [INSERT POP CHARACTER]?</h1>
-                    <p>{`Total Time: ${time}s`}</p>
+    const handleStart = () => {
+        setIsGameRunning(true);
+        setIsTimerActive(true);
+    }
+
+
+    if (isGameRunning) {
+        return (
+            <div className="App">
+                <div className="header">
+                    <div className='header-sub'>
+                        <h1>Where's [INSERT POP CHARACTER]?</h1>
+                        <p>{`Total Time: ${time}s`}</p>
+                    </div>
+                    <div className='header-sub'>
+                        <h3>Characters left to find:</h3>
+                        <ul>
+                            {charactersLeft.map((el, index) => {
+                                return <li key={index}>{el[0].toUpperCase() + el.slice(1, el.length)}</li>
+                            })}
+                        </ul>
+                    </div>
                 </div>
-                <div className='header-sub'>
-                    <h3>Characters left to find:</h3>
-                    <ul>
-                        {charactersLeft.map((el, index) => {
-                            return <li key={index}>{el[0].toUpperCase() + el.slice(1, el.length)}</li>
-                        })}
-                    </ul>
+                {isSelectorDisplayed
+                    ? <CharacterSelector 
+                        x={selectorCoords[0]} 
+                        y={selectorCoords[1]} 
+                        cellX={lastClickCoords[0]}
+                        cellY={lastClickCoords[1]}
+                        onClickClose={onCloseSelector}
+                        onClickCharacter={onSelectCharacter}
+                        charactersFound={charactersFound}
+                        />
+                    : null
+                }
+                <div className="grid-container">
+                    {generateGrid(GRIDX, GRIDY)}
+                    <img src={bgImg} alt="background" />
                 </div>
             </div>
-            {isSelectorDisplayed
-                ? <CharacterSelector 
-                    x={selectorCoords[0]} 
-                    y={selectorCoords[1]} 
-                    cellX={lastClickCoords[0]}
-                    cellY={lastClickCoords[1]}
-                    onClickClose={onCloseSelector}
-                    onClickCharacter={onSelectCharacter}
-                    charactersFound={charactersFound}
-                    />
-                : null
-            }
-            <div className="grid-container">
-                {generateGrid(GRIDX, GRIDY)}
-                <img src={bgImg} alt="background" />
+        );
+    } else {
+        return (
+            <div className="App">
+                <StartMenu onClickStart={handleStart}/>
             </div>
-        </div>
-    );
+        );
+    }
 }
 
 export default App;

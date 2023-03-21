@@ -1,6 +1,7 @@
 * {
     padding: 0;
     margin: 0;
+    box-sizing: border-box;
 }
 
 .grid-container {
@@ -42,7 +43,7 @@ img {
     top: 0;
     padding: 8px;
     width: 100%;
-    background-color: darkslategrey;
+    background-color: darkslategray;
     display: flex;
     justify-content: space-around;
     align-items: center;
@@ -57,4 +58,26 @@ img {
     flex-direction: column;
     justify-content: center;
     align-items: center;
+}
+
+.menu {
+    display: flex;
+    justify-content: center;
+    padding-top: 50px;
+    background-color: darkslategray;
+    height: 100vh;
+}
+
+.menu * {
+    font-size: 48px;
+}
+
+.menu p {
+    color: whitesmoke;
+    margin-right: 80px;
+}
+
+button {
+    height: min-content;
+    background-color: whitesmoke;
 }
